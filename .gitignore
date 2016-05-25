@@ -1,0 +1,12 @@
+# R Markdown generated HTML
+README.html
+
+# R sessions
+.Rhistory
+.RData
+
+# Directory crud
+.DS_Store
+
+# Automatically added by devtools
+inst/doc

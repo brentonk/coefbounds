@@ -1,0 +1,88 @@
+---
+output: github_document
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, echo = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "README-"
+)
+```
+
+# coefbounds
+
+Nonparametric Bounds for Regression with Interval-Censored Outcomes
+
+Author: Brenton Kenkel, Vanderbilt University
+
+
+## Installation
+
+**coefbounds** is not yet available on CRAN.  To install directly from GitHub:
+
+```r
+if (!require("devtools")) {
+    install.packages("devtools")
+    library("devtools")
+}
+
+devtools::install_github("brentonk/coefbounds")
+```
+
+
+## Note
+
+**coefbounds** is in an early stage of development.  Backward-incompatible API changes are possible until version 1.0.0 is released.
+
+
+## Usage
+
+Below are some simple usage examples.  For more fleshed-out examples, see the package vignette: `vignette("introduction", package = "coefbounds")`.
+
+```{r load-package}
+library("coefbounds")
+```
+
+I'll begin by generating some simple data with an interval-censored outcome.
+
+```{r sim-data}
+set.seed(97)
+x1 <- rnorm(100)
+x2 <- rnorm(100)
+y <- 1 - x1 + x2 + rnorm(100)
+lwr <- floor(y)
+upr <- ceiling(y)
+```
+
+To estimate coefficient bounds, use `lm_bounds()` with a formula of the form `yl + yu ~ x1 + x2 + ...`, where `yl` is the lower bound on each response value and `yu` is the upper bound.
+
+```{r full-bounds}
+fit_full <- lm_bounds(lwr + upr ~ x1 + x2, boot = 100)
+fit_full
+```
+
+For inference, make sure `lm_bounds()` is run with `boot > 0` and use `interval_hypothesis()` or `confint()`.
+
+```{r int-hyp}
+interval_hypothesis(fit = fit_full,
+                    term = "x1",
+                    interval = c(0, 0),
+                    type = "subset")
+interval_hypothesis(fit = fit_full,
+                    term = "x2",
+                    interval = c(0.7, 1.6),
+                    type = "equal")
+```
+
+```{r confint}
+confint(fit_full, level = 0.99)
+```
+
+
+## To Do
+
+* Allow clustering in critical value bootstrap.
+* Enable parallel processing in bootstrap.

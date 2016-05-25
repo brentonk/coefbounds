@@ -1,0 +1,142 @@
+---
+title: "Introduction to coefbounds"
+author: "Brenton Kenkel"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Introduction to coefbounds}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+bibliography: references.bib
+---
+
+
+```{r setup, echo = FALSE, message = FALSE}
+knitr::opts_chunk$set(collapse = T, comment = "#>")
+library("coefbounds")
+set.seed(1562)
+```
+
+
+**coefbounds** is an R package to estimate nonparametric bounds on regression coefficients in the presence of interval-censored outcomes.  For example, in the linear case, the goal is to estimate $\beta$ in the equation
+$$
+Y_i = x_i^\top \beta + \epsilon_i.
+$$
+For some or all observations, instead of the true value $Y_i$ we observe bounds $Y_i^L, Y_i^U$ such that $Y_i^L \leq Y_i \leq Y_i^U$.  The purpose of coefbounds is to estimate the coefficients $\beta$ without imposing any additional assumptions on the censored observations.  Absent such assumptions, $\beta$ is not point-identified [@Manski:2003uy].  It is, however, interval-identified---we can place bounds on the coefficients by ruling out values of that are not consistent with *any* feasible realization of the true values of $Y_i$.  To do so, coefbounds uses the estimators and inferential techniques proposed by @Beresteanu:2008bh and @Stoye:2006gf.
+
+The easiest case to think through is when $x_i$ contains only an intercept.  Then $\beta$ is the population mean and, if $Y_i$ were fully observed, the OLS estimate of $\beta$ would equal the sample mean.  Even with the interval censoring on $Y_i$, we know that the sample mean is bounded below by $\bar{Y}^L = \frac{1}{N} \sum_{i=1}^N Y_i^L$ and above by $\bar{Y}^U = \frac{1}{N} \sum_{i=1}^N Y_i^U$.  Moreover, in a sufficiently large sample, we would reject the null hypothesis that $E[Y_i] = \mu$ if $\mu \notin [\bar{Y}^L, \bar{Y}^U]$.  The functions in coefbounds extend this basic idea to the multivariate context.
+
+@bmm2010 provide Stata software with functionality similar to coefbounds.  In my limited testing, the bootstrap inferential procedure for linear models in coefbounds is at least an order of magnitude faster than that of `CI1D` in @bmm2010.  However, coefbounds does not (yet) estimate two-dimensional confidence regions.
+
+
+## Estimation
+
+I will use the data on the prestige of Canadian occupations from the car package to illustrate the basic functionality of coefbounds.
+
+```{r prestige}
+data(Prestige, package = "car")
+head(Prestige)
+```
+
+Suppose our goal is to estimate the model
+$$
+\text{prestige}_i = \beta_0 + \beta_1 \text{education}_i + \beta_2 \text{income}_i + \epsilon_i,
+$$
+but instead of the exact values of prestige, we only observe it in 10-point intervals.  The code below creates these hypothetical lower and upper bounds on the response.  (It also rescales income to be on roughly the same order of magnitude as education.)
+
+```{r prestige-transform}
+library("dplyr")
+Prestige <- mutate(Prestige,
+                   lwr = prestige - prestige %% 10,
+                   upr = lwr + 10,
+                   income = income / 1000)
+head(Prestige)
+```
+
+The function `lm_bounds()` estimates lower and upper bounds on each coefficient---the least and greatest values that could be obtained from linear regression on some realization of the "filled in" data.  Its main arguments are:
+
+* `formula`, of the form `yl + yu ~ x1 + x2 + ...`, where `yl` and `yu` are the lower and upper bounds on the response and the `x`s are the covariates.
+* `data`, the data frame to take the variables from.
+* `boot`, the number of bootstrap iterations used for inference.
+
+```{r fit-bounds}
+fit_bounds <- lm_bounds(lwr + upr ~ education + income,
+                        data = Prestige,
+                        boot = 100)
+fit_bounds
+```
+
+The matrix of coefficient bounds can be retrieved via `coef()`.
+
+```{r coef-method}
+coef(fit_bounds)
+```
+
+If we run OLS on the true values, we see that each coefficient indeed lies within the estimated bounds.
+
+```{r compare}
+fit_lm <- lm(prestige ~ education + income,
+             data = Prestige)
+coef(fit_lm)
+```
+
+
+## Inference
+
+Although the output of `lm_bounds()` looks like confidence intervals, it is just a set of sample estimates.  This is most clearly illustrated in the case of regression on a constant, in which case the coefficient bounds equal the means of the lower and upper bounds on the response.
+
+```{r not-confint}
+lm_bounds(lwr + upr ~ 1, data = Prestige, boot = 0)
+summarise(Prestige,
+          mean_lwr = mean(lwr),
+          mean_upr = mean(upr))
+```
+
+coefbounds performs inference via the bootstrap statistics proposed by @Beresteanu:2008bh.  Inference is with respect to the population identification region---the set of coefficient vectors that are observationally indistinguishable from the "true" coefficients, given the interval-censoring of the response.  The true coefficients are, by definition, a member of the identification region.
+
+Let $\mathcal{B}_k$ be the identification region for the $k$'th coefficient (or, more precisely, the projection of the identification region onto the dimension of coefficient $k$).  The function `interval_hypothesis()` takes an interval $B = [b_L, b_H]$ and tests either the null hypothesis that $B \subseteq \mathcal{B}_k$ (`type = "subset"`, the default) or that $\mathcal{B}_k = B$ (`type = "equal"`).
+
+For both education and income, let's test the null hypothesis that the identification region for the corresponding coefficient contains zero.
+
+```{r hyp-directed}
+interval_hypothesis(fit_bounds,
+                    term = "education",
+                    interval = c(0, 0),
+                    type = "subset")
+interval_hypothesis(fit_bounds,
+                    term = "income",
+                    interval = c(0, 0),
+                    type = "subset")
+```
+
+For education, we would reject the null hypothesis at the conventional level and conclude that education is positively associated with an occupation's prestige.  For income, however, even though the sample bounds do not contain zero, we cannot reject the null hypothesis that the population identification region contains zero.
+
+In this context even more so than usual, failure to reject the null hypothesis that $0 \in \mathcal{B}_k$ does not necessarily mean we should conclude the $k$'th variable has no effect.  It could be the case that the true effect of income is positive but small enough not to be detectable given the coarse censoring of the outcome.  In other words, tests of a point hypothesis are conservative and should be interpreted as such.
+
+@Beresteanu:2008bh define the $\mathcal{DU}$ confidence region as the widest interval such that we would not reject the null hypothesis $\mathcal{DU} \subseteq \mathcal{B}_k$.  The `confint()` method for `"coefbounds"` objects calculates this interval for each coefficient at the specified confidence level:
+
+```{r DU}
+confint(fit_bounds, level = 0.99)
+```
+
+Similarly, the $CC$ confidence collection is the set of intervals such that we would not reject the null hypothesis $\mathcal{B}_k = B$ if and only if $B \in CC$.  `confint(..., type = "CC")` gives the $CC$ set.
+
+```{r CC}
+confint(fit_bounds, level = 0.90, type = "CC")
+```
+
+For example, we would not reject the null hypothesis that the identification region for the coefficient on education equals $[1.5, 6]$, since the region for the lower bounds includes 1.5 and the region for the upper bound includes 6.  However, we would reject the null hypothesis that the identification region equals $[4, 5]$, as this interval is too narrow.  To confirm this, we can compare to `interval_hypothesis()`.
+
+```{r hyp-equal}
+interval_hypothesis(fit_bounds,
+                    term = "education",
+                    interval = c(1.5, 6),
+                    type = "equal")
+interval_hypothesis(fit_bounds,
+                    term = "education",
+                    interval = c(4, 5),
+                    type = "equal")
+```
+
+
+## References
