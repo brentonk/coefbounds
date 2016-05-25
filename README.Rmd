@@ -14,7 +14,7 @@ knitr::opts_chunk$set(
 
 # coefbounds
 
-[![Travis-CI Build Status](https://travis-ci.org/brentonk/coefbounds.svg?branch=master)](https://travis-ci.org/brentonk/coefbounds)
+[![Travis-CI Build Status](https://travis-ci.org/brentonk/coefbounds.svg?branch=master)](https://travis-ci.org/brentonk/coefbounds) [![codecov](https://codecov.io/gh/brentonk/coefbounds/branch/master/graph/badge.svg)](https://codecov.io/gh/brentonk/coefbounds)
 
 Nonparametric Bounds for Regression with Interval-Censored Outcomes
 
