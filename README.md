@@ -18,7 +18,7 @@ if (!require("devtools")) {
     library("devtools")
 }
 
-devtools::install_github("brentonk/coefbounds")
+devtools::install_github("brentonk/coefbounds", build_vignettes = TRUE)
 ```
 
 Note

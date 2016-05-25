@@ -29,7 +29,7 @@ if (!require("devtools")) {
     library("devtools")
 }
 
-devtools::install_github("brentonk/coefbounds")
+devtools::install_github("brentonk/coefbounds", build_vignettes = TRUE)
 ```
 
 
@@ -42,7 +42,7 @@ devtools::install_github("brentonk/coefbounds")
 
 Below are some simple usage examples.  For more fleshed-out examples, see the package vignette: `vignette("introduction", package = "coefbounds")`.
 
-```{r load-package}
+```{r load-package, message = FALSE}
 library("coefbounds")
 ```
 
