@@ -3,6 +3,8 @@
 coefbounds
 ==========
 
+[![Travis-CI Build Status](https://travis-ci.org/brentonk/coefbounds.svg?branch=master)](https://travis-ci.org/brentonk/coefbounds)
+
 Nonparametric Bounds for Regression with Interval-Censored Outcomes
 
 Author: Brenton Kenkel, Vanderbilt University
