@@ -93,3 +93,25 @@ test_that("lm_bounds() computes distances correctly", {
     expect_equal(dH,
                  fit$dist[[3]][, "directed"])
 })
+
+test_that("lm_bounds() returns same results as Stoye formula", {
+    set.seed(76432)
+    x1 <- rnorm(100)
+    x2 <- rnorm(100)
+    yl <- 1 + x1 - x2 + rnorm(100)
+    yu <- yl + rexp(100)
+    fit <- lm_bounds(yl + yu ~ x1 + x2,
+                     boot = 0)
+
+    ## Stoye formula
+    X <- cbind(1, x1, x2)
+    mu <- X %*% solve(crossprod(X))
+    for (d in 1:3) {
+        y_lwr <- ifelse(mu[, d] > 0, yl, yu)
+        y_upr <- ifelse(mu[, d] > 0, yu, yl)
+        cf_lwr <- lsfit(x = X, y = y_lwr, intercept = FALSE)$coefficients[d]
+        cf_upr <- lsfit(x = X, y = y_upr, intercept = FALSE)$coefficients[d]
+        expect_equivalent(cf_lwr, coef(fit)[d, 1])
+        expect_equivalent(cf_upr, coef(fit)[d, 2])
+    }
+})
