@@ -1,6 +1,6 @@
 context("Linear model bounds")
 
-test_that("lm_bounds() fails on bad input", {
+test_that("coefbounds() fails on bad input", {
     set.seed(471)
     x1 <- rnorm(10)
     x2 <- rnorm(10)
@@ -8,40 +8,40 @@ test_that("lm_bounds() fails on bad input", {
     yl <- rnorm(10)
     yu <- yl + 1
 
-    expect_error(lm_bounds(yl + yu ~ x1 + x3),
+    expect_error(coefbounds(yl + yu ~ x1 + x3),
                  "collinear")
-    expect_error(lm_bounds(yl ~ x1 + x2),
+    expect_error(coefbounds(yl ~ x1 + x2),
                  "two terms")
-    expect_error(lm_bounds(yl + yu + x3 ~ x1 + x2),
+    expect_error(coefbounds(yl + yu + x3 ~ x1 + x2),
                  "two terms")
-    expect_error(lm_bounds(yu + yl ~ x1 + x2),
+    expect_error(coefbounds(yu + yl ~ x1 + x2),
                  "exceed upper bounds")
 })
 
-test_that("lm_bounds() properly handles collinearity in bootstrap", {
+test_that("coefbounds() properly handles collinearity in bootstrap", {
     x1 <- c(1, 0, 0, 0, 0)
     yl <- rnorm(5)
     yu <- yl + 1
 
     set.seed(22)
-    expect_warning(fit <- lm_bounds(yl + yu ~ x1,
-                                    boot = 10,
-                                    remove_collinear = TRUE),
+    expect_warning(fit <- coefbounds(yl + yu ~ x1,
+                                     boot = 10,
+                                     remove_collinear = TRUE),
                    "collinear design matrix")
     expect_true(nrow(fit$dist[[1]]) < 10)
 
     set.seed(22)
-    expect_error(lm_bounds(yl + yu ~ x1,
-                           boot = 10,
-                           remove_collinear = FALSE),
+    expect_error(coefbounds(yl + yu ~ x1,
+                            boot = 10,
+                            remove_collinear = FALSE),
                  "collinear design matrix")
 })
 
-test_that("lm_bounds() without covariates returns means", {
+test_that("coefbounds() without covariates returns means", {
     set.seed(200)
     yl <- rnorm(100)
     yu <- yl + exp(100)
-    fit <- lm_bounds(yl + yu ~ 1, boot = 0)
+    fit <- coefbounds(yl + yu ~ 1, boot = 0)
 
     expect_equal(coef(fit)["(Intercept)", "lower"],
                  mean(yl))
@@ -49,7 +49,7 @@ test_that("lm_bounds() without covariates returns means", {
                  mean(yu))
 })
 
-test_that("lm_bounds() equals lm() when point-identified", {
+test_that("coefbounds() equals lm() when point-identified", {
     set.seed(8998)
     dat <- data.frame(yl = rnorm(100))
     dat$yu <- dat$yl
@@ -57,9 +57,9 @@ test_that("lm_bounds() equals lm() when point-identified", {
         dat[[paste0("x", i)]] <- rnorm(100)
 
     fit_lm <- lm(yl ~ . - yu, data = dat)
-    fit_bd <- lm_bounds(yl + yu ~ .,
-                        data = dat,
-                        boot = 0)
+    fit_bd <- coefbounds(yl + yu ~ .,
+                         data = dat,
+                         boot = 0)
 
     expect_equal(coef(fit_lm),
                  coef(fit_bd)[, 1])
@@ -67,15 +67,15 @@ test_that("lm_bounds() equals lm() when point-identified", {
                  coef(fit_bd)[, 2])
 })
 
-test_that("lm_bounds() computes distances correctly", {
+test_that("coefbounds() computes distances correctly", {
     set.seed(14087)
     x1 <- rnorm(100)
     x2 <- rnorm(100)
     yl <- 1 + x1 - x2 + rnorm(100)
     yu <- yl + rexp(100)
-    fit <- lm_bounds(yl + yu ~ x1 + x2,
-                     boot = 10,
-                     return_boot_est = TRUE)
+    fit <- coefbounds(yl + yu ~ x1 + x2,
+                      boot = 10,
+                      return_boot_est = TRUE)
 
     ## Compare to (3.2) and (3.3) in Beresteanu and Molinari
     H <- t(fit$boot[[2]]) - coef(fit)[2, ]
@@ -94,14 +94,14 @@ test_that("lm_bounds() computes distances correctly", {
                  fit$dist[[3]][, "directed"])
 })
 
-test_that("lm_bounds() returns same results as Stoye formula", {
+test_that("coefbounds() returns same results as Stoye formula", {
     set.seed(76432)
     x1 <- rnorm(100)
     x2 <- rnorm(100)
     yl <- 1 + x1 - x2 + rnorm(100)
     yu <- yl + rexp(100)
-    fit <- lm_bounds(yl + yu ~ x1 + x2,
-                     boot = 0)
+    fit <- coefbounds(yl + yu ~ x1 + x2,
+                      boot = 0)
 
     ## Stoye formula
     X <- cbind(1, x1, x2)

@@ -6,10 +6,10 @@ x2 <- rnorm(100)
 yl <- rnorm(100)
 yu <- yl + rexp(100)
 
-fit <- lm_bounds(yl + yu ~ x1 + x2, boot = 111)
+fit <- coefbounds(yl + yu ~ x1 + x2, boot = 111)
 
 test_that("interval_hypothesis() fails on bad input", {
-    fit_bad <- lm_bounds(yl + yu ~ x1 + x2, boot = 0)
+    fit_bad <- coefbounds(yl + yu ~ x1 + x2, boot = 0)
     expect_error(interval_hypothesis(fit_bad,
                                      term = "x1",
                                      interval = c(0, 0)),

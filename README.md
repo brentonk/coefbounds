@@ -48,14 +48,14 @@ lwr <- floor(y)
 upr <- ceiling(y)
 ```
 
-To estimate coefficient bounds, use `lm_bounds()` with a formula of the form `yl + yu ~ x1 + x2 + ...`, where `yl` is the lower bound on each response value and `yu` is the upper bound.
+To estimate coefficient bounds, use `coefbounds()` with a formula of the form `yl + yu ~ x1 + x2 + ...`, where `yl` is the lower bound on each response value and `yu` is the upper bound.
 
 ``` r
-fit_full <- lm_bounds(lwr + upr ~ x1 + x2, boot = 100)
+fit_full <- coefbounds(lwr + upr ~ x1 + x2, boot = 100)
 fit_full
 #> 
 #> Call:
-#> lm_bounds(formula = lwr + upr ~ x1 + x2, boot = 100)
+#> coefbounds(formula = lwr + upr ~ x1 + x2, boot = 100)
 #> 
 #> Estimated coefficient bounds:
 #>              lower upper
@@ -64,7 +64,7 @@ fit_full
 #> x2           0.722  1.48
 ```
 
-For inference, make sure `lm_bounds()` is run with `boot > 0` and use `interval_hypothesis()` or `confint()`.
+For inference, make sure `coefbounds()` is run with `boot > 0` and use `interval_hypothesis()` or `confint()`.
 
 ``` r
 interval_hypothesis(fit = fit_full,

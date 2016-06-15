@@ -60,7 +60,7 @@ yl <- floor(y)
 yu <- ceiling(y)
 
 ## Fit model
-fit <- lm_bounds(yl + yu ~ x1 + x2, boot = 100)
+fit <- coefbounds(yl + yu ~ x1 + x2, boot = 100)
 
 ## Calculate DU confidence region for coefficient on x1
 confint(fit, parm = "x1")

@@ -53,16 +53,16 @@ Prestige <- mutate(Prestige,
 head(Prestige)
 ```
 
-The function `lm_bounds()` estimates lower and upper bounds on each coefficient---the least and greatest values that could be obtained from linear regression on some realization of the "filled in" data.  Its main arguments are:
+The function `coefbounds()` estimates lower and upper bounds on each coefficient---the least and greatest values that could be obtained from linear regression on some realization of the "filled in" data.  Its main arguments are:
 
 * `formula`, of the form `yl + yu ~ x1 + x2 + ...`, where `yl` and `yu` are the lower and upper bounds on the response and the `x`s are the covariates.
 * `data`, the data frame to take the variables from.
 * `boot`, the number of bootstrap iterations used for inference.
 
 ```{r fit-bounds}
-fit_bounds <- lm_bounds(lwr + upr ~ education + income,
-                        data = Prestige,
-                        boot = 100)
+fit_bounds <- coefbounds(lwr + upr ~ education + income,
+                         data = Prestige,
+                         boot = 100)
 fit_bounds
 ```
 
@@ -83,10 +83,10 @@ coef(fit_lm)
 
 ## Inference
 
-Although the output of `lm_bounds()` looks like confidence intervals, it is just a set of sample estimates.  This is most clearly illustrated in the case of regression on a constant, in which case the coefficient bounds equal the means of the lower and upper bounds on the response.
+Although the output of `coefbounds()` looks like confidence intervals, it is just a set of sample estimates.  This is most clearly illustrated in the case of regression on a constant, in which case the coefficient bounds equal the means of the lower and upper bounds on the response.
 
 ```{r not-confint}
-lm_bounds(lwr + upr ~ 1, data = Prestige, boot = 0)
+coefbounds(lwr + upr ~ 1, data = Prestige, boot = 0)
 summarise(Prestige,
           mean_lwr = mean(lwr),
           mean_upr = mean(upr))
@@ -136,6 +136,26 @@ interval_hypothesis(fit_bounds,
                     term = "education",
                     interval = c(4, 5),
                     type = "equal")
+```
+
+
+## Binary Responses
+
+A logistic regression model for binary responses is also available.  Since there is no closed-form expression for the coefficient bounds in the logistic case, an iterative approximation is used.  The `maxit` argument controls the number of iterations for the approximation.  In practice, the default value `maxit = 10` seems to work well.
+
+```{r logit, warning = FALSE}
+Prestige <- mutate(Prestige,
+                   lwr_binary = ifelse(lwr < 50, 0, 1),
+                   upr_binary = ifelse(upr < 50, 0, 1))
+
+fit_logit <- coefbounds(lwr_binary + upr_binary ~ education + income,
+                        data = Prestige,
+                        model = "logit",
+                        boot = 10)
+
+fit_logit
+
+confint(fit_logit)
 ```
 
 
