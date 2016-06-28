@@ -4,7 +4,7 @@
 \alias{lm_bounds}
 \title{Bounds for all coefficients in a linear model}
 \usage{
-lm_bounds(YL, YU, X, ...)
+lm_bounds(YL, YU, X, Z, ...)
 }
 \arguments{
 \item{YL}{response lower bound}
@@ -12,6 +12,8 @@ lm_bounds(YL, YU, X, ...)
 \item{YU}{response upper bound}
 
 \item{X}{design matrix}
+
+\item{Z}{instrument matrix}
 
 \item{...}{for safety}
 }

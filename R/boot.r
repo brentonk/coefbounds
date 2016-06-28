@@ -13,7 +13,7 @@ if (getRversion() >= "3.1.0")
 ##' @author Brenton Kenkel
 ##' @keywords internal
 ##' @import foreach
-boot_coefs <- function(boot, remove_collinear, YL, YU, X, model, maxit)
+boot_coefs <- function(boot, remove_collinear, YL, YU, X, Z, model, maxit)
 {
     coefs <- foreach (i = iterators::icount(boot)) %do% {
         ## Draw bootstrap resample
@@ -21,6 +21,7 @@ boot_coefs <- function(boot, remove_collinear, YL, YU, X, model, maxit)
                            size = nrow(X),
                            replace = TRUE)
         X_boot <- X[ind_boot, , drop = FALSE]
+        Z_boot <- Z[ind_boot, , drop = FALSE]
         YL_boot <- YL[ind_boot]
         YU_boot <- YU[ind_boot]
 
@@ -36,6 +37,7 @@ boot_coefs <- function(boot, remove_collinear, YL, YU, X, model, maxit)
             bd_boot <- coefbounds_fit(YL = YL_boot,
                                       YU = YU_boot,
                                       X = X_boot,
+                                      Z = Z_boot,
                                       model = model,
                                       maxit = maxit)
         }

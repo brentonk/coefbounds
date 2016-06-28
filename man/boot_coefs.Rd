@@ -4,7 +4,7 @@
 \alias{boot_coefs}
 \title{Bootstrap coefficient bounds}
 \usage{
-boot_coefs(boot, remove_collinear, YL, YU, X, model, maxit)
+boot_coefs(boot, remove_collinear, YL, YU, X, Z, model, maxit)
 }
 \arguments{
 \item{boot}{number of bootstrap iterations}
@@ -18,6 +18,8 @@ triggers a failure}
 \item{YU}{response upper bound}
 
 \item{X}{design matrix}
+
+\item{Z}{instrument matrix}
 
 \item{model}{"linear" or "logit"}
 

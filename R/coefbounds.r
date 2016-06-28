@@ -11,7 +11,10 @@
 ##' @title Coefficient bounds for linear models
 ##' @param formula Model formula of the form \code{yl + yu ~ x1 + x2 + ...},
 ##'     where \code{yl} is the lower bound on the response, \code{yu} is the
-##'     upper bound, and \code{x1 + x2 + ...} are the covariates.
+##'     upper bound, and \code{x1 + x2 + ...} are the covariates.  For
+##'     instrumental variables estimation, use a formula like \code{yl + yu ~ x1
+##'     + x2 + ... | z1 + z2 + ...}, as in \code{\link[AER]{ivreg}} in the
+##'     \pkg{AER} package.  IV estimates not available for logit models.
 ##' @param data,subset,na.action As in \code{\link{lm}}
 ##' @param model \code{"linear"} for linear regression (default), \code{"logit"}
 ##'     for logistic regression.
@@ -70,10 +73,19 @@ coefbounds <- function(formula,
     mf[[1L]] <- quote(stats::model.frame)
     mf <- eval(mf, parent.frame())
 
-    ## Extract design matrix
-    X <- stats::model.matrix(Formula, data = mf)
+    ## Extract design matrix and instrument matrix (if specified)
+    X <- stats::model.matrix(Formula, data = mf, rhs = 1)
     if (qr(X)$rank < ncol(X))
         stop("design matrix is collinear")
+    if (length(Formula)[2] > 1) {
+        Z <- stats::model.matrix(Formula, data = mf, rhs = 2)
+        if (ncol(Z) < ncol(X))
+            stop("fewer instruments than regressors")
+        if (model == "logit")
+            stop("instrumental variables not allowed in logit models")
+    } else {
+        Z <- NULL
+    }
 
     ## Extract response bounds and sanity check
     Y <- Formula::model.part(Formula, data = mf, lhs = 1)
@@ -95,6 +107,7 @@ coefbounds <- function(formula,
     bd <- coefbounds_fit(YL = YL,
                          YU = YU,
                          X = X,
+                         Z = Z,
                          model = model,
                          maxit = maxit)
 
@@ -105,6 +118,7 @@ coefbounds <- function(formula,
                               YL = YL,
                               YU = YU,
                               X = X,
+                              Z = Z,
                               model = model,
                               maxit = maxit)
         dist_boot <- boot_dist(fit_main = bd,
@@ -127,12 +141,13 @@ coefbounds <- function(formula,
 ##' @param YL response lower bound
 ##' @param YU response upper bound
 ##' @param X design matrix
+##' @param Z instrument matrix
 ##' @param model "linear" or "logit"
 ##' @param maxit max iterations for logit approximation
 ##' @return matrix containing the estimated bounds
 ##' @author Brenton Kenkel
 ##' @keywords internal
-coefbounds_fit <- function(YL, YU, X, model, maxit)
+coefbounds_fit <- function(YL, YU, X, Z, model, maxit)
 {
     fn_fit <- switch(model,
                      logit = logit_bounds,
@@ -140,6 +155,7 @@ coefbounds_fit <- function(YL, YU, X, model, maxit)
     fn_fit(YL = YL,
            YU = YU,
            X = X,
+           Z = Z,
            maxit = maxit)
 }
 

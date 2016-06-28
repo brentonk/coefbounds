@@ -1,6 +1,6 @@
 Package: coefbounds
 Title: Nonparametric Bounds for Regression with Interval-Censored Outcomes
-Version: 0.1.0
+Version: 0.1.0.9000
 Authors@R: person("Brenton", "Kenkel", email = "brenton.kenkel@gmail.com", role = c("aut", "cre"))
 Description: Estimates nonparametric bounds on regression parameters when outcome data are interval-censored.  Performs hypothesis tests and calculates confidence regions by bootstrap, following Beresteanu and Molinari (2008).
 URL: https://github.com/brentonk/coefbounds
@@ -15,7 +15,8 @@ Suggests:
     knitr,
     rmarkdown,
     car,
-    dplyr
+    dplyr,
+    AER
 License: GPL (>= 2)
 Encoding: UTF-8
 LazyData: true

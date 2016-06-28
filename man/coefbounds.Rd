@@ -11,7 +11,10 @@ coefbounds(formula, data, subset, na.action, model = c("linear", "logit"),
 \arguments{
 \item{formula}{Model formula of the form \code{yl + yu ~ x1 + x2 + ...},
 where \code{yl} is the lower bound on the response, \code{yu} is the
-upper bound, and \code{x1 + x2 + ...} are the covariates.}
+upper bound, and \code{x1 + x2 + ...} are the covariates.  For
+instrumental variables estimation, use a formula like \code{yl + yu ~ x1
++ x2 + ... | z1 + z2 + ...}, as in \code{\link[AER]{ivreg}} in the
+\pkg{AER} package.  IV estimates not available for logit models.}
 
 \item{data, subset, na.action}{As in \code{\link{lm}}}
 

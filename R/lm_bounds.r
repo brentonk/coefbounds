@@ -4,7 +4,7 @@
 ##' @return matrix containing the estimated bounds
 ##' @author Brenton Kenkel
 ##' @keywords internal
-lm_bounds <- function(YL, YU, X, ...)
+lm_bounds <- function(YL, YU, X, Z, ...)
 {
     fit_d <- function(d, YL, YU, X.)
     {
@@ -18,6 +18,16 @@ lm_bounds <- function(YL, YU, X, ...)
         ub <- sum(pmax(xd * YL, xd * YU))
 
         c(lb, ub) / sum(xd^2)
+    }
+
+    ## Calculate design matrix for 2SLS if requested
+    ##
+    ## Code from AER::ivreg.fit
+    if (!is.null(Z)) {
+        auxreg <- stats::lm.fit(Z, X)
+        XZ <- as.matrix(auxreg$fitted.values)
+        colnames(XZ) <- colnames(X)
+        X <- XZ
     }
 
     bounds <- sapply(seq_len(ncol(X)),

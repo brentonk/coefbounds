@@ -4,7 +4,7 @@
 \alias{coefbounds_fit}
 \title{Direct to appropriate fitting function}
 \usage{
-coefbounds_fit(YL, YU, X, model, maxit)
+coefbounds_fit(YL, YU, X, Z, model, maxit)
 }
 \arguments{
 \item{YL}{response lower bound}
@@ -12,6 +12,8 @@ coefbounds_fit(YL, YU, X, model, maxit)
 \item{YU}{response upper bound}
 
 \item{X}{design matrix}
+
+\item{Z}{instrument matrix}
 
 \item{model}{"linear" or "logit"}
 
