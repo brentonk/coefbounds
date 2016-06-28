@@ -26,6 +26,7 @@
 ##' \item{\code{test_stat}}{Test statistic.}
 ##' \item{\code{p}}{Bootstrap p-value.}
 ##' \item{\code{n_boot}}{Number of bootstrap iterations.}
+##' \item{\code{clus}}{Whether a cluster bootstrap was used.}
 ##' \item{\code{term}}{Name of coefficient tested.}
 ##' \item{\code{interval}}{Interval specified.}
 ##' \item{\code{estimate}}{Sample estimate of coefficient bounds.}
@@ -36,7 +37,7 @@
 ##' Arie Beresteanu, Francesca Molinari and Darcy Steeg Morris.  2010.
 ##'     "Asymptotics for Partially Identified Models in Stata."
 ##'     \url{https://molinari.economics.cornell.edu/programs.html}
-##' @importFrom stats coef
+##' @importFrom stats coef nobs
 ##' @export
 ##' @example inst/examples/interval_hypothesis.r
 interval_hypothesis <- function(fit,
@@ -63,12 +64,13 @@ interval_hypothesis <- function(fit,
     test_stat <- hausdorff_distance(x = interval,
                                     y = coef(fit)[term, ],
                                     directed = directed)
-    test_stat <- test_stat * sqrt(stats::nobs(fit))
+    test_stat <- test_stat * sqrt(nobs(fit, type = "cluster"))
     p <- mean(test_stat <= dist_boot)
 
     structure(list(test_stat = test_stat,
                    p = p,
                    n_boot = nrow(fit$dist[[term]]),
+                   clus = nobs(fit, type = "cluster") < nobs(fit),
                    term = term,
                    interval = interval,
                    estimate = coef(fit)[term, ],
@@ -108,7 +110,9 @@ print.interval_hypothesis <- function(x,
                fmt_hyp),
         paste0("Estimated identification region: ",
                fmt_est),
-        paste0("Test statistic: sqrt(N) * ",
+        paste0("Test statistic: sqrt(",
+               if (x$clus) "Nclus" else "N",
+               ") * ",
                if (directed) "directed ",
                "Hausdorff distance"),
         "",

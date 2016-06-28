@@ -27,6 +27,7 @@ A list of class \code{"interval_hypothesis"} containing:
 \item{\code{test_stat}}{Test statistic.}
 \item{\code{p}}{Bootstrap p-value.}
 \item{\code{n_boot}}{Number of bootstrap iterations.}
+\item{\code{clus}}{Whether a cluster bootstrap was used.}
 \item{\code{term}}{Name of coefficient tested.}
 \item{\code{interval}}{Interval specified.}
 \item{\code{estimate}}{Sample estimate of coefficient bounds.}

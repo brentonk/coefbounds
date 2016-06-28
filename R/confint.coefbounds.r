@@ -40,7 +40,7 @@
 ##'     "Asymptotics for Partially Identified Models in Stata."
 ##'     \url{https://molinari.economics.cornell.edu/programs.html}
 ##' @import foreach
-##' @importFrom stats coef
+##' @importFrom stats coef nobs
 ##' @export
 ##' @example inst/examples/confint.coefbounds.r
 confint.coefbounds <- function(object,
@@ -74,7 +74,7 @@ confint.coefbounds <- function(object,
                                term = term,
                                level = level,
                                directed = directed)
-        radius <- crit / sqrt(stats::nobs(object))
+        radius <- crit / sqrt(nobs(object, type = "cluster"))
 
         if (directed) {
             lwr <- cf[term, "lower"] - radius

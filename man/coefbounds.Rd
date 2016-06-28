@@ -5,7 +5,7 @@
 \title{Coefficient bounds for linear models}
 \usage{
 coefbounds(formula, data, subset, na.action, model = c("linear", "logit"),
-  boot = 100, maxit = 10, remove_collinear = TRUE,
+  boot = 100, cluster_id = NULL, maxit = 10, remove_collinear = TRUE,
   return_boot_est = FALSE)
 }
 \arguments{
@@ -23,6 +23,9 @@ for logistic regression.}
 
 \item{boot}{Number of bootstrap iterations used to estimate the critical
 values for inference.}
+
+\item{cluster_id}{Vector of cluster IDs for cluster bootstrap.  If
+\code{NULL} (the default), an ordinary bootstrap is used.}
 
 \item{maxit}{Maximum number of iterations for the approximation in logistic
 regression models.  Ignored when \code{model = "linear"}.}

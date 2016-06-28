@@ -4,10 +4,12 @@
 \alias{boot_coefs}
 \title{Bootstrap coefficient bounds}
 \usage{
-boot_coefs(boot, remove_collinear, YL, YU, X, Z, model, maxit)
+boot_coefs(boot, cluster_id, remove_collinear, YL, YU, X, Z, model, maxit)
 }
 \arguments{
 \item{boot}{number of bootstrap iterations}
+
+\item{cluster_id}{cluster membership vector}
 
 \item{remove_collinear}{if \code{TRUE}, removes bootstrap iterations with a
 collinear design matrix (with warning); otherwise, any collinearity

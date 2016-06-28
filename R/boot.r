@@ -4,6 +4,7 @@ if (getRversion() >= "3.1.0")
 
 ##' Bootstrap coefficient bounds
 ##' @param boot number of bootstrap iterations
+##' @param cluster_id cluster membership vector
 ##' @param remove_collinear if \code{TRUE}, removes bootstrap iterations with a
 ##'     collinear design matrix (with warning); otherwise, any collinearity
 ##'     triggers a failure
@@ -13,13 +14,17 @@ if (getRversion() >= "3.1.0")
 ##' @author Brenton Kenkel
 ##' @keywords internal
 ##' @import foreach
-boot_coefs <- function(boot, remove_collinear, YL, YU, X, Z, model, maxit)
+boot_coefs <- function(boot, cluster_id, remove_collinear, YL, YU, X, Z, model, maxit)
 {
     coefs <- foreach (i = iterators::icount(boot)) %do% {
         ## Draw bootstrap resample
-        ind_boot <- sample(seq_len(nrow(X)),
-                           size = nrow(X),
-                           replace = TRUE)
+        if (is.null(cluster_id)) {
+            ind_boot <- sample(seq_len(nrow(X)),
+                               size = nrow(X),
+                               replace = TRUE)
+        } else {
+            ind_boot <- draw_boot_ind(cluster_id)
+        }
         X_boot <- X[ind_boot, , drop = FALSE]
         Z_boot <- Z[ind_boot, , drop = FALSE]
         YL_boot <- YL[ind_boot]
@@ -53,6 +58,21 @@ boot_coefs <- function(boot, remove_collinear, YL, YU, X, Z, model, maxit)
     names(out_list) <- colnames(X)
 
     out_list
+}
+
+##' Draw indices for cluster bootstrap
+##' @inheritParams coefbounds
+##' @return vector of indices
+##' @author Brenton Kenkel
+##' @keywords internal
+draw_boot_ind <- function(cluster_id)
+{
+    unq_id <- unique(cluster_id)
+    samp <- sample(unq_id,
+                   size = length(unq_id),
+                   replace = TRUE)
+    ind <- lapply(samp, function(x) which(cluster_id == x))
+    unlist(ind)
 }
 
 ##' Calculate bootstrap distances

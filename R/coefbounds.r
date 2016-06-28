@@ -20,6 +20,8 @@
 ##'     for logistic regression.
 ##' @param boot Number of bootstrap iterations used to estimate the critical
 ##'     values for inference.
+##' @param cluster_id Vector of cluster IDs for cluster bootstrap.  If
+##'     \code{NULL} (the default), an ordinary bootstrap is used.
 ##' @param maxit Maximum number of iterations for the approximation in logistic
 ##'     regression models.  Ignored when \code{model = "linear"}.
 ##' @param remove_collinear How to treat boostrap iterations in which the design
@@ -57,6 +59,7 @@ coefbounds <- function(formula,
                        na.action,
                        model = c("linear", "logit"),
                        boot = 100,
+                       cluster_id = NULL,
                        maxit = 10,
                        remove_collinear = TRUE,
                        return_boot_est = FALSE)
@@ -103,6 +106,14 @@ coefbounds <- function(formula,
     if (model == "logit" && !all(c(YL, YU) %in% 0:1))
         stop("YL and YU must be binary in logit models")
 
+    ## Check or create cluster IDs
+    if (!is.null(cluster_id) && length(cluster_id) != nrow(X)) {
+        stop("cluster_id contains ",
+             length(cluster_id),
+             " observations; data contains ",
+             nrow(X))
+    }
+
     ## Calculate unidimensional coefficient bounds
     bd <- coefbounds_fit(YL = YL,
                          YU = YU,
@@ -112,8 +123,11 @@ coefbounds <- function(formula,
                          maxit = maxit)
 
     ## Nonparametric bootstrap of bound estimates
+    n_obs <- c(fit = nrow(X),
+               cluster = if (!is.null(cluster_id)) length(unique(cluster_id)) else nrow(X))
     if (boot > 0) {
         bd_boot <- boot_coefs(boot = boot,
+                              cluster_id = cluster_id,
                               remove_collinear = remove_collinear,
                               YL = YL,
                               YU = YU,
@@ -123,7 +137,7 @@ coefbounds <- function(formula,
                               maxit = maxit)
         dist_boot <- boot_dist(fit_main = bd,
                                fit_boot = bd_boot,
-                               n_obs = nrow(X))
+                               n_obs = n_obs["cluster"])
     } else {
         bd_boot <- dist_boot <- NULL
     }
@@ -131,7 +145,7 @@ coefbounds <- function(formula,
     structure(list(coefficients = bd,
                    dist = dist_boot,
                    boot_est = if (return_boot_est) bd_boot else NULL,
-                   nobs = nrow(X),
+                   nobs = n_obs,
                    call = cl,
                    model = model),
               class = "coefbounds")
@@ -171,4 +185,11 @@ print.coefbounds <- function(x, ...)
     cat("\n")
 
     invisible(x)
+}
+
+##' @export
+nobs.coefbounds <- function(object, type = c("fit", "cluster"), ...)
+{
+    type <- match.arg(type)
+    unname(object$nobs[type])
 }
